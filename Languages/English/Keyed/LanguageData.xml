@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MZQ.QueerTweaks>Queer Tweaks</MZQ.QueerTweaks>
+  <MZQ.Overview>Allows teaking orientation chances, and assigns the traits after trait generation, so they don't take up trait slots.</MZQ.Overview>
+  <MZQ.StraightChance>Chance of a Pawn Being Straight (Romantically Interested Only in Opposite-Gender Partners):</MZQ.StraightChance>
+  <MZQ.BisexualChance>Chance of a Pawn Being Bisexual (Romantically Interested in Partners of Either Gender):</MZQ.BisexualChance>
+  <MZQ.GayChance>Chance of a Pawn Being Gay (Romantically Interested Only in Same-Gender Partners):</MZQ.GayChance>
+  <MZQ.AsexualChance>Chance of a Pawn Being Asexual (Uninterested in Any Romantic Entanglements):</MZQ.AsexualChance>
+</LanguageData>
