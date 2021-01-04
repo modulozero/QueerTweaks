@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ScenPartDef>
+    <defName>OrientationRatios</defName>
+    <label>Orientation Distribution</label>
+    <category>Misc</category>
+    <scenPartClass>QueerTweaks.OrientationDistributionScenarioPart</scenPartClass>
+    <summaryPriority>490</summaryPriority>
+  </ScenPartDef>
+</Defs>
