@@ -52,6 +52,7 @@ namespace QueerTweaks
         public override void ExposeData()
         {
             base.ExposeData();
+            Scribe_Values.Look(ref this.applies_to, "queerTweaksAppliesTo");
             Scribe_Values.Look(ref this.asexualChance, "queerTweaksAsexualChance");
             Scribe_Values.Look(ref this.bisexualChance, "queerTweaksBisexualChance");
             Scribe_Values.Look(ref this.straightChance, "queerTweaksStraightChance");
@@ -70,12 +71,10 @@ namespace QueerTweaks
 
         public override void Notify_PawnGenerated(Pawn pawn, PawnGenerationContext context, bool redressed)
         {
-            base.Notify_PawnGenerated(pawn, context, redressed);
-            if (!PawnGenerationContextUtility.Includes(this.applies_to, context))
+            if (redressed || !PawnGenerationContextUtility.Includes(this.applies_to, context) || pawn.gender == Gender.None || !pawn.RaceProps.Humanlike || pawn.story == null)
             {
                 return;
             }
-
             float orientation = Rand.Value;
             if (pawn.gender == Gender.None) { return; }
 
@@ -88,23 +87,24 @@ namespace QueerTweaks
             {
                 trait = pawn.story.traits.GetTrait(TraitDefOf.Asexual);
             }
-            Log.Message("Hi!");
-            if(trait != null)
+            if (trait != null)
             {
-                pawn.story.traits.allTraits.Remove(trait);
-
                 // Try to refund the removed trait
                 Log.Message("Refunding trait " + trait.Label + " for pawn " + pawn.Name.ToStringShort);
+                pawn.story.traits.allTraits.Remove(trait);
+                
                 List<TraitDef> doNotWant = new List<TraitDef>();   
                 doNotWant.Add(TraitDefOf.Bisexual);
                 doNotWant.Add(TraitDefOf.Gay);
                 doNotWant.Add(TraitDefOf.Asexual);
+
                 List<TraitDef> possibilities = DefDatabase<TraitDef>.AllDefsListForReading.Where(
                     predicate: td => 
                         !doNotWant.Contains(td) && 
                         !pawn.story.traits.allTraits.Where(t => t.def.Equals(td) || t.def.ConflictsWith(td)).Any() &&
                         !pawn.skills.skills.Where(s => !s.passion.Equals(Passion.None) && td.ConflictsWithPassion(s.def)).Any()
                         ).ToList();
+
                 if (!possibilities.NullOrEmpty())
                 {
                     TraitDef newTraitDef = possibilities.RandomElementByWeight(td => td.GetGenderSpecificCommonality(pawn.gender));
@@ -118,49 +118,40 @@ namespace QueerTweaks
                     Log.Message("Refunded with " + newTrait.LabelCap);
                 }
             }
-
+            
             if (orientation < asexualChance / 100)
             {
-                if (LovePartnerRelationUtility.HasAnyExLovePartnerOfTheOppositeGender(pawn) || LovePartnerRelationUtility.HasAnyExLovePartnerOfTheOppositeGender(pawn))
+                if (LovePartnerRelationUtility.HasAnyLovePartner(pawn) || LovePartnerRelationUtility.HasAnyExLovePartnerOfTheOppositeGender(pawn) || LovePartnerRelationUtility.HasAnyExLovePartnerOfTheSameGender(pawn))
                 {
-                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Bisexual, 0, false));
-                }
-                else if (LovePartnerRelationUtility.HasAnyLovePartnerOfTheSameGender(pawn) || LovePartnerRelationUtility.HasAnyExLovePartnerOfTheSameGender(pawn))
-                {
-                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Bisexual, 0, false));
+                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Bisexual, PawnGenerator.RandomTraitDegree(TraitDefOf.Bisexual), false));
                 }
                 else
                 {
-                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Asexual, 0, false));
+                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Asexual, PawnGenerator.RandomTraitDegree(TraitDefOf.Asexual), false));
                 }
             }
             else if (orientation < ((asexualChance + bisexualChance) / 100))
             {
-                pawn.story.traits.GainTrait(new Trait(TraitDefOf.Bisexual, 0, false));
+                pawn.story.traits.GainTrait(new Trait(TraitDefOf.Bisexual, PawnGenerator.RandomTraitDegree(TraitDefOf.Bisexual), false));
             }
             else if (orientation < ((asexualChance + bisexualChance + gayChance) / 100))
             {
-                if (LovePartnerRelationUtility.HasAnyLovePartnerOfTheOppositeGender(pawn) || LovePartnerRelationUtility.HasAnyExLovePartnerOfTheOppositeGender(pawn))
+                if (LovePartnerRelationUtility.HasAnyLovePartnerOfTheSameGender(pawn) || LovePartnerRelationUtility.HasAnyExLovePartnerOfTheSameGender(pawn))
                 {
-                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Bisexual, 0, false));
+                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Bisexual, PawnGenerator.RandomTraitDegree(TraitDefOf.Bisexual), false));
                 }
                 else
                 {
-                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Gay, 0, false));
+                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Gay, PawnGenerator.RandomTraitDegree(TraitDefOf.Gay), false));
                 }
             }
             else
             {
                 if (LovePartnerRelationUtility.HasAnyLovePartnerOfTheSameGender(pawn) || LovePartnerRelationUtility.HasAnyExLovePartnerOfTheSameGender(pawn))
                 {
-                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Bisexual, 0, false));
-                }
-                if (LovePartnerRelationUtility.HasAnyLovePartnerOfTheSameGender(pawn) || LovePartnerRelationUtility.HasAnyExLovePartnerOfTheSameGender(pawn))
-                {
-                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Bisexual, 0, false));
+                    pawn.story.traits.GainTrait(new Trait(TraitDefOf.Bisexual, PawnGenerator.RandomTraitDegree(TraitDefOf.Bisexual), false));
                 }
             }
-
         }
     }
 
