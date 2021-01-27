@@ -87,6 +87,7 @@ namespace QueerTweaks
             {
                 trait = pawn.story.traits.GetTrait(TraitDefOf.Asexual);
             }
+
             if (trait != null)
             {
                 // Try to refund the removed trait
@@ -102,7 +103,10 @@ namespace QueerTweaks
                     predicate: td => 
                         !doNotWant.Contains(td) && 
                         !pawn.story.traits.allTraits.Where(t => t.def.Equals(td) || t.def.ConflictsWith(td)).Any() &&
-                        !pawn.skills.skills.Where(s => !s.passion.Equals(Passion.None) && td.ConflictsWithPassion(s.def)).Any()
+                        !pawn.skills.skills.Where(s => !s.passion.Equals(Passion.None) && td.ConflictsWithPassion(s.def)).Any() &&
+                        (td.requiredWorkTypes == null || !pawn.OneOfWorkTypesIsDisabled(td.requiredWorkTypes)) &&
+                        (td.forcedPassions == null || !td.forcedPassions.Any(p => p.IsDisabled(pawn.story.DisabledWorkTagsBackstoryAndTraits, pawn.GetDisabledWorkTypes(true)))) && 
+                        !pawn.WorkTagIsDisabled(td.requiredWorkTags)
                         ).ToList();
 
                 if (!possibilities.NullOrEmpty())
@@ -111,11 +115,16 @@ namespace QueerTweaks
                     int degree = 0;
                     if (!newTraitDef.degreeDatas.NullOrEmpty())
                     {
-                        degree = newTraitDef.degreeDatas.RandomElementByWeight(dd => dd.commonality).degree;
+                        degree = PawnGenerator.RandomTraitDegree(newTraitDef);
                     }
                     Trait newTrait = new Trait(newTraitDef, degree, false);
                     pawn.story.traits.GainTrait(newTrait);
+
                     Log.Message("Refunded with " + newTrait.LabelCap);
+                }
+                else
+                {
+                    Log.Message("Couldn't find a trait to refund that with, giving up and moving on.");
                 }
             }
             
